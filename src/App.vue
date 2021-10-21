@@ -1,42 +1,29 @@
 <template>
-  <div class="c0mment">
-    <div
-      class="drop-zone"
-      @drop="onDrop($event, 1)"
-      @dragenter.prevent
-      @dragover.prevent
-    >
+  <div class="c0mdment">
+    <div class="line" v-for="dropZone in dropZones" :key="dropZone.id">
       <div
-        v-for="item in getList(1)"
-        :key="item.id"
-        :id="item.id"
-        class="drag-el"
-        draggable="true"
-        @dragstart="startDrag($event, item)"
+        :class="dropZone.class"
+        :id="dropZone.id"
+        @drop="onDrop($event, dropZone.id)"
+        @dragenter.prevent
+        @dragover.prevent
       >
-        {{ item.title }}
+        <div
+          v-for="item in getList(dropZone.id)"
+          :key="item.id"
+          :id="item.id"
+          class="drag-el"
+          draggable="true"
+          @dragstart="startDrag($event, item)"
+        >
+          {{ item.title }}
+        </div>
       </div>
     </div>
-    <div
-      class="drop-zone"
-      @drop="onDrop($event, 2)"
-      @dragenter.prevent
-      @dragover.prevent
-    >
-      <div
-        v-for="item in getList(2)"
-        :key="item.id"
-        :id="item.id"
-        class="drag-el"
-        draggable="true"
-        @dragstart="startDrag($event, item)"
-      >
-        {{ item.title }}
-      </div>
-    </div>
-    <button @click="createEl(2)">list</button>
+    <button @click="addLine">Create a dropZone</button>
+    <button @click="createEl">Create a node</button>
   </div>
-  <div class="container">
+  <div class="container c0mment">
     <select name="zoom" id="zommSelection" v-model="zoom" @change="createMms">
       <option value="1" selected="true">x1</option>
       <option value="2">x2</option>
@@ -61,8 +48,12 @@
 <script>
 import { ref } from "vue";
 import { uuid } from "vue-uuid";
-import $ from "jquery";
+// import $ from "jquery";
+// import "jquery-ui-dist/jquery-ui";
+import "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js";
+import "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js";
 import LineVue from "./components/Line.vue";
+let jQuery = $;
 // import interact from "https://cdn.interactjs.io/v1.10.11/interactjs/index.js";
 export default {
   components: {
@@ -71,13 +62,50 @@ export default {
   data() {
     return {
       zoom: 1,
+      dropZones: [
+        {
+          id: "5",
+          class: "drop-zone",
+        },
+      ],
     };
   },
   methods: {
+    Dropped(event, ui) {
+      $(".drag-el").each(function () {
+        //var p = $(this).position();
+      });
+      refresh();
+    },
     onResize() {
       this.createMms();
     },
-    addLine() {},
+    addLine() {
+      this.dropZones.push({
+        id: uuid.v4(),
+        class: "drop-zone",
+      });
+      $(".drop-zone").sortable({
+        update: function (event, ui) {
+          // Dropped();
+        },
+      });
+      $(".drag-zone").draggable({
+        drag: function (event, ui) {
+          var snapTolerance = $(this).draggable("option", "snapTolerance");
+          var topRemainder = ui.position.top % 50;
+          var leftRemainder = ui.position.left % 50;
+
+          if (topRemainder <= snapTolerance) {
+            ui.position.top = ui.position.top - topRemainder;
+          }
+
+          if (leftRemainder <= snapTolerance) {
+            ui.position.left = ui.position.left - leftRemainder;
+          }
+        },
+      });
+    },
     rulerEnumeration() {
       let rulerCounter = 0;
       $("#ruler")
@@ -102,11 +130,7 @@ export default {
     },
   },
   setup() {
-    const items = ref([
-      { id: 0, title: "Item A", list: 1 },
-      { id: 1, title: "Item B", list: 1 },
-      { id: 2, title: "Item C", list: 2 },
-    ]);
+    const items = ref([]);
     const getList = (list) => {
       return items.value.filter((item) => item.list == list);
     };
@@ -120,8 +144,13 @@ export default {
       const item = items.value.find((item) => item.id == itemID);
       item.list = list;
     };
-    const createEl = (list) => {
-      items.value.push({ id: uuid.v4(), title: `Item ${uuid.v4()}`, list });
+    const createEl = () => {
+      const firstLineID = $(".line:first-child .drop-zone").attr("id");
+      items.value.push({
+        id: uuid.v4(),
+        title: `Item ${uuid.v4()}`,
+        list: firstLineID,
+      });
     };
     return { getList, onDrop, createEl, uuid, startDrag };
   },
@@ -129,6 +158,8 @@ export default {
     window.addEventListener("resize", this.onResize);
     this.createMms();
     this.rulerEnumeration();
+    // $("#1")
+    $(".drag-el").addClass("hh");
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize);
@@ -159,12 +190,16 @@ export default {
   background-color: #ecf0f1;
   padding: 10px;
   min-height: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .drag-el {
   background-color: #3498db;
   color: white;
   padding: 5px;
-  margin-bottom: 10px;
+  margin: 10px;
+  max-width: calc(100% / 4);
 }
 .drag-el:last-child {
   margin-bottom: 0;
