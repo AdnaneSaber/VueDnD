@@ -1,6 +1,6 @@
 <template>
   <div class="c0mdment">
-    <div class="line" v-for="dropZone in dropZones" :key="dropZone.id">
+    <!-- <div class="line" v-for="dropZone in dropZones" :key="dropZone.id">
       <div
         :class="dropZone.class"
         :id="dropZone.id"
@@ -8,6 +8,48 @@
         @dragenter.prevent
         @dragover.prevent
       >
+        <button @click="createEl(dropZone.id)">Create a node</button>
+        <div
+          v-for="item in getList(dropZone.id)"
+          :key="item.id"
+          :id="item.id"
+          class="drag-el"
+          draggable="true"
+          @dragstart="startDrag($event, item)"
+        >
+          {{ item.title }}
+        </div>
+      </div>
+    </div> -->
+    <!-- <button @click="addLine">Create a dropZone</button> -->
+    <!-- <button @click="createEl">Create a node</button> -->
+  </div>
+  <div class="container c0mmeent">
+    <select name="zoom" id="zommSelection" v-model="zoom" @change="createMms">
+      <option value="1" selected="true">x1</option>
+      <option value="2">x2</option>
+      <option value="10">x10</option>
+    </select>
+    <div class="timeLineFirstLineContainer">
+      <button class="addTimeLineLineButton" @click="addLine">+</button>
+      <div id="ruler"></div>
+    </div>
+    <div class="timeLineLines">
+      <!-- <div class="line">
+        <div
+          class="img"
+          style="background-image: url('./src/assets/timeLineImage.jpg')"
+        ></div>
+      </div> -->
+      <div class="line" v-for="dropZone in dropZones" :key="dropZone.id">
+      <div
+        :class="dropZone.class"
+        :id="dropZone.id"
+        @drop="onDrop($event, dropZone.id)"
+        @dragenter.prevent
+        @dragover.prevent
+      >
+        <button @click="createEl(dropZone.id)">Create a node</button>
         <div
           v-for="item in getList(dropZone.id)"
           :key="item.id"
@@ -20,26 +62,6 @@
         </div>
       </div>
     </div>
-    <button @click="addLine">Create a dropZone</button>
-    <button @click="createEl">Create a node</button>
-  </div>
-  <div class="container c0mment">
-    <select name="zoom" id="zommSelection" v-model="zoom" @change="createMms">
-      <option value="1" selected="true">x1</option>
-      <option value="2">x2</option>
-      <option value="10">x10</option>
-    </select>
-    <div class="timeLineFirstLineContainer">
-      <button class="addTimeLineLineButton" @click="addLine">+</button>
-      <div id="ruler"></div>
-    </div>
-    <div class="timeLineLines">
-      <div class="line">
-        <div
-          class="img"
-          style="background-image: url('./src/assets/timeLineImage.jpg')"
-        ></div>
-      </div>
     </div>
   </div>
   <!-- <LineVue /> -->
@@ -72,8 +94,8 @@ export default {
   },
   methods: {
     Dropped(event, ui) {
-      $(".drag-el").each(function () {
-        //var p = $(this).position();
+      $(".drag-el,.line").each(function () {
+        console.log($(this).position());
       });
       refresh();
     },
@@ -85,26 +107,31 @@ export default {
         id: uuid.v4(),
         class: "drop-zone",
       });
-      $(".drop-zone").sortable({
-        update: function (event, ui) {
-          // Dropped();
-        },
-      });
-      $(".drag-zone").draggable({
-        drag: function (event, ui) {
-          var snapTolerance = $(this).draggable("option", "snapTolerance");
-          var topRemainder = ui.position.top % 50;
-          var leftRemainder = ui.position.left % 50;
+      setTimeout(() => {
+        $(".drop-zone").sortable({
+          revert: true,
+          update: function (event, ui) {
+            // Dropped();
+          },
+        });
+        $(".drop-zone").draggable({
+          drag: function (event, ui) {
+            var snapTolerance = $(this).draggable("option", "snapTolerance");
+            var topRemainder = ui.position.top % 50;
+            var leftRemainder = ui.position.left % 50;
 
-          if (topRemainder <= snapTolerance) {
-            ui.position.top = ui.position.top - topRemainder;
-          }
+            if (topRemainder <= snapTolerance) {
+              ui.position.top = ui.position.top - topRemainder;
+            }
 
-          if (leftRemainder <= snapTolerance) {
-            ui.position.left = ui.position.left - leftRemainder;
-          }
-        },
-      });
+            if (leftRemainder <= snapTolerance) {
+              ui.position.left = ui.position.left - leftRemainder;
+            }
+          },
+          axis: "x",
+          containment:'parent'
+        });
+      }, 1000);
     },
     rulerEnumeration() {
       let rulerCounter = 0;
@@ -131,6 +158,13 @@ export default {
   },
   setup() {
     const items = ref([]);
+    const features = [
+      "Animation",
+      "Voice - TTS",
+      "Light",
+      "Effect",
+      "Mouvement",
+    ];
     const getList = (list) => {
       return items.value.filter((item) => item.list == list);
     };
@@ -144,12 +178,12 @@ export default {
       const item = items.value.find((item) => item.id == itemID);
       item.list = list;
     };
-    const createEl = () => {
+    const createEl = (listId) => {
       const firstLineID = $(".line:first-child .drop-zone").attr("id");
       items.value.push({
         id: uuid.v4(),
-        title: `Item ${uuid.v4()}`,
-        list: firstLineID,
+        title: features[Math.floor(Math.random() * features.length)],
+        list: listId,
       });
     };
     return { getList, onDrop, createEl, uuid, startDrag };
@@ -160,6 +194,7 @@ export default {
     this.rulerEnumeration();
     // $("#1")
     $(".drag-el").addClass("hh");
+    $("*").disableSelection();
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.onResize);
@@ -200,9 +235,6 @@ export default {
   padding: 5px;
   margin: 10px;
   max-width: calc(100% / 4);
-}
-.drag-el:last-child {
-  margin-bottom: 0;
 }
 
 .container {
