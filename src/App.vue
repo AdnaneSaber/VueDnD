@@ -35,36 +35,30 @@
       <div id="ruler"></div>
     </div>
     <div class="timeLineLines">
-      <!-- <div class="line">
-        <div
-          class="img"
-          style="background-image: url('./src/assets/timeLineImage.jpg')"
-        ></div>
-      </div> -->
       <div class="line" v-for="dropZone in dropZones" :key="dropZone.id">
-      <div
-        :class="dropZone.class"
-        :id="dropZone.id"
-        @drop="onDrop($event, dropZone.id)"
-        @dragenter.prevent
-        @dragover.prevent
-      >
-        <button @click="createEl(dropZone.id)">Create a node</button>
         <div
-          v-for="item in getList(dropZone.id)"
-          :key="item.id"
-          :id="item.id"
-          class="drag-el"
-          draggable="true"
-          @dragstart="startDrag($event, item)"
+          :class="dropZone.class"
+          :id="dropZone.id"
+          @drop="onDrop($event, dropZone.id)"
+          @dragenter.prevent
+          @dragover.prevent
+          style="background-image: url('./src/assets/timeLineImage.jpg')"
         >
-          {{ item.title }}
+          <button @click="createEl(dropZone.id)"><i class="fas fa-chevron-down"></i></button>
+          <div
+            v-for="item in getList(dropZone.id)"
+            :key="item.id"
+            :id="item.id"
+            class="drag-el"
+            draggable="true"
+            @dragstart="startDrag($event, item)"
+          >
+            {{ item.title }}
+          </div>
         </div>
       </div>
     </div>
-    </div>
   </div>
-  <!-- <LineVue /> -->
 </template>
 
 <script>
@@ -129,7 +123,7 @@ export default {
             }
           },
           axis: "x",
-          containment:'parent'
+          containment: "parent",
         });
       }, 1000);
     },
@@ -221,13 +215,13 @@ export default {
 }
 .drop-zone {
   width: 50%;
-  margin: 50px auto;
   background-color: #ecf0f1;
   padding: 10px;
   min-height: 10px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  border-bottom: 1px solid;
 }
 .drag-el {
   background-color: #3498db;
@@ -238,7 +232,6 @@ export default {
 }
 
 .container {
-  /* background-color: #cccccc; */
   width: 100%;
   height: 100vw;
   display: flex;
@@ -316,13 +309,22 @@ export default {
     }
   }
   .timeLineLines {
+    padding-left: calc(150px + 0.6em);
+    height: 50px;
     .line {
-      padding-left: 150px;
-      .img {
-        width: 100%;
-        height: 70px;
+      height: 100%;
+      .drop-zone {
         background-repeat: repeat-x;
         background-size: contain;
+        position: relative;
+        height: 100%;
+        button {
+          position: absolute;
+          left: -100px;
+          width: 100px;
+          height: 100%;
+          top: 0;
+        }
       }
     }
   }
